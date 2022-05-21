@@ -20,13 +20,52 @@ def get_price(ticker: str, type: str):
     if json.loads(data): # if stock was found
         return json.loads(data)[0]['price']
     else:
-        return -1
+        return None
+
+def get_company_price_change(ticker:str):
+    url = (f"https://financialmodelingprep.com/api/v3/quote/{ticker}?apikey={settings.API_KEY}")
+    response = urlopen(url, cafile=certifi.where())
+    data = response.read().decode("utf-8")
+
+    if json.loads(data): # if stock was found
+        return json.loads(data)[0]['change']
+    else:
+        return None
+ 
+def get_company_market_cap(ticker:str):
+    url = (f"https://financialmodelingprep.com/api/v3/quote/{ticker}?apikey={settings.API_KEY}")
+    response = urlopen(url, cafile=certifi.where())
+    data = response.read().decode("utf-8")
+
+    if json.loads(data): # if stock was found
+        return json.loads(data)[0]['marketCap']
+    else:
+        return None
+
+def get_company_price-earings_ratio(ticker:str):
+    url = (f"https://financialmodelingprep.com/api/v3/quote/{ticker}?apikey={settings.API_KEY}")
+    response = urlopen(url, cafile=certifi.where())
+    data = response.read().decode("utf-8")
+
+    if json.loads(data): # if stock was found
+        return json.loads(data)[0]['pe']
+    else:
+        return None
 
 
-# def get_income_statements(ticker:str,limit,period,):
 
-# def get_daily_prices(ticker:str,timeseries):
-#     url = (f"https://financialmodelingprep.com/api/v3/historical-price-full/{ticker}?apikey={API_KEY}")
+"""def get_history_crypto(ticker: str, type: str):
+    match time.lower():
+        case ''
+  https://financialmodelingprep.com/api/v3/historical-chart/1min/BTCUSD?apikey=fc9f5e0ac89b400c141ad9f64b91f1de
 
-# def get_key_metrics(ticker:str, limit, API_key,period):
-#     url = (f"https://financialmodelingprep.com/api/v3")
+    url = (f"https://financialmodelingprep.com/api/v3/{quote}/{ticker}?apikey={settings.API_KEY}")
+
+    response = urlopen(url, cafile=certifi.where())
+    data = response.read().decode("utf-8")
+
+    if json.loads(data): # if stock was found
+        return json.loads(data)[0]['price']
+    else:
+        return -1"""
+
