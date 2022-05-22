@@ -2,6 +2,7 @@ import json
 import pathlib
 import requests
 import matplotlib as mplot
+from fmp_api import *
 
 
 with open("dataBase.json", "r") as f:
@@ -14,36 +15,44 @@ with open("dataBase.json", "r") as f:
 
 class Player():
     def __init__(self, discordID):
-        def isPlaying(discordID):
-            with open("dataBase.json", 'r+') as file:
-                #load the data from the json file
-                fileData = json.load(file)
-                print(fileData.keys())
-                if fileData.get(discordID) is None:
-                    return 0
-                else:
-                    print(discordID, "is already playing")
-                    return 1
+        self.disID = discordID
+        values = {}
+        values["balance"] = 100000
+        values["portfolio"] = []
+        values["cryptoWallet"] = []
+        values["performance"] = []
+        values["history"] = []
 
-        def writeJson(discordID, toBeAdded, fileName = 'dataBase.json'):
-            with open(fileName, 'r+') as file:
-                fileData = json.load(file)
-                fileData[discordID] = toBeAdded
-                file.seek(0)
-                json.dump(fileData, file, indent = 4)
-
-        if isPlaying(discordID) == 0:
-            values = {}
-            values["balance"] = 100000
-            values["portfolio"] = []
-            values["cryptoWallet"] = []
-            values["performance"] = []
-            values["history"] = []
-            writeJson(discordID, values)
+    def isPlaying(self):
+        with open("dataBase.json", 'r+') as file:
+            #load the data from the json file
+            fileData = json.load(file)
             
-new = Player(10003)
-new1 = Player(10003)
+            print(self.disID)
+            print(fileData.keys())
 
+            if self.disID in fileData.keys():
+                print("Player will be added")
+                return 0
+            else:
+                print(f"{self.disID} is a player already")
+                return 1
+
+    def writeJson(self, discordID, toBeAdded, fileName = 'dataBase.json'):
+        with open(fileName, 'r+') as file:
+            fileData = json.load(file)
+            fileData[discordID] = toBeAdded
+            file.seek(0)
+            json.dump(fileData, file, indent = 4)
+
+def buyStock(type, ticker):
+    return get_price(ticker, type)
+
+
+# new = Player(10003)            
+# new.isPlaying()
+
+print (type(buyStock("stock", "AAPL")))
 # with open('dataBase.json', 'r+') as file:
 #     #load the data from the json file
 #     fileData = json.load(file)

@@ -68,19 +68,5 @@
             "bought 10 texas instruments stocks",
             "bought 10 microsoft stocks"
         ]
-    },
-    "10003": {
-        "balance": 100000,
-        "portfolio": [],
-        "cryptoWallet": [],
-        "performance": [],
-        "history": []
-    },
-    "10003": {
-        "balance": 100000,
-        "portfolio": [],
-        "cryptoWallet": [],
-        "performance": [],
-        "history": []
     }
 }
