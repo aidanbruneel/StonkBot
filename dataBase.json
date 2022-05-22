@@ -1,0 +1,72 @@
+{
+    "murtadha": {
+        "balance": 50000,
+        "portfolio": [
+            {
+                "AAPL": 10,
+                "GOOGL": 10,
+                "TSLA": 20
+            }
+        ],
+        "performance": [
+            0.02,
+            0.05,
+            0.06,
+            0.1,
+            0.01
+        ],
+        "history": [
+            "bought 10 apple stocks",
+            "sold 5 apple stocks",
+            "bought 5 apple stocks",
+            "bought 10 google stocks",
+            "bought 20 tesla stocks"
+        ]
+    },
+    "layal": {
+        "balance": 45000,
+        "portfolio": [
+            {
+                "HPQ": 10,
+                "INTC": 20,
+                "AMD": 15
+            }
+        ],
+        "performance": [
+            0.1,
+            0.07,
+            0.08,
+            0.01,
+            -0.5
+        ],
+        "history": [
+            "bought 10 Hewlett-Packard stovcks",
+            "bought 20 intel stocks",
+            "Bought 15 AMD stocks"
+        ]
+    },
+    "Ali": {
+        "balance": 43000,
+        "portfolio": [
+            {
+                "WMT": 20,
+                "MSFT": 15,
+                "TXN": 10
+            }
+        ],
+        "performance": [
+            -0.06,
+            -0.08,
+            0.01,
+            0.08,
+            0.1
+        ],
+        "history": [
+            "bought 20 walmart stocks",
+            "bought 15 microsoft stocks",
+            "sold 10 microsoft stocks",
+            "bought 10 texas instruments stocks",
+            "bought 10 microsoft stocks"
+        ]
+    }
+}
