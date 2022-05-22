@@ -53,11 +53,13 @@ async def buy_asset(
             ["Order Type", "Market Buy"],
             ["Asset Price", f"${query.price:.2f}"],
             ["Quantity", quantity], 
-            ["Subtotal", f"${(quantity * query.price):.2f}"],
+            ["Order Subtotal", f"${(quantity * query.price):.2f}"],
             ["Fees", f"${(fee):.2f}"],
-            ["Order Total", f"${(quantity * query.price):.2f}"],
-            [chr(173), chr(173)]
+            ["Order Total", f"${(quantity * query.price + fee):.2f}"],
+            [chr(173), chr(173)] # change this to balance remaining
         ]
+
+        # if query.image
 
         if query.exchange == "CRYPTO":
             await ctx.respond(embed=embedded_message(
@@ -66,7 +68,7 @@ async def buy_asset(
                 title=symbol,
                 desc=query.name,
                 fields=fields_list,
-                footer_text="Pending",
+                footer_text="Order Status: Pending",
                 colour=0x11BB11))
         else:
             await ctx.respond(embed=embedded_message(
@@ -76,10 +78,11 @@ async def buy_asset(
                 title=symbol,
                 desc=query.name,
                 fields=fields_list,
-                footer_text="Pending",
+                footer_text="Order Status: Pending",
                 colour=0x11BB11))
 
 
+# remove the final if query.exchange and have only one await statement
 @bot.command(name='sell', description="Sell an asset.")
 async def sell_asset(
     ctx: discord.ApplicationContext,
@@ -94,7 +97,39 @@ async def sell_asset(
     else:
 
         if query.exchange == "CRYPTO":
-            pass
+            fee = query.price * quantity * 0.0015
+        else:
+            fee = 0.00
+
+        fields_list = [
+            ["Order Type", "Market Sell"],
+            ["Asset Price", f"${query.price:.2f}"],
+            ["Quantity", quantity], 
+            ["Order Subtotal", f"${(quantity * query.price):.2f}"],
+            ["Fees", f"${(fee):.2f}"],
+            ["Order Total", f"${(quantity * query.price - fee):.2f}"],
+            [chr(173), chr(173)]
+        ]
+
+        if query.exchange == "CRYPTO":
+            await ctx.respond(embed=embedded_message(
+                status='pending',
+                author=query.exchange,
+                title=symbol,
+                desc=query.name,
+                fields=fields_list,
+                footer_text="Order Status: Pending",
+                colour=0xB20D30))
+        else:
+            await ctx.respond(embed=embedded_message(
+                status='pending',
+                author=query.exchange,
+                thumbnail=query.image,
+                title=symbol,
+                desc=query.name,
+                fields=fields_list,
+                footer_text="Order Status: Pending",
+                colour=0xB20D30))
 
 
 # -----------------------------------------------------------------------------------------
