@@ -1,9 +1,11 @@
 import discord
-from discord.ext import commands
 import logging
 
+from embedded_messages import embedded_message
 import settings
-import fmp_api as api
+from data_plotting import plot
+from fmp_api import Query
+
 
 # -----------------------------------------------------------------------------------------
 # LOGGER
@@ -13,6 +15,7 @@ logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
+
 
 # -----------------------------------------------------------------------------------------
 # BOT LOGIN
@@ -24,59 +27,130 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
     # Will need to load json files on login
 
-# -----------------------------------------------------------------------------------------
-# COMMANDS
-# -----------------------------------------------------------------------------------------
-buy_commands = bot.create_group("buy", "Buy an asset")
-sell_commands = bot.create_group("sell", "Sell an asset")
-
-@buy_commands.command(name="stock", description="Buy stock.")
-async def stock(
-    ctx: discord.ApplicationContext,
-    ticker: discord.Option(str, "Enter ticker"),
-    quantity: discord.Option(int, "Enter desired quantity to buy")
-    ):
-    ticker = ticker.upper()
-    price = api.get_price(ticker, 'stock')
-
-    await ctx.respond(f"Bought {quantity} {ticker} for ${(price * quantity):.2f}!")
-
-@buy_commands.command(name="crypto", description="Buy crypto.")
-async def crypto(
-    ctx: discord.ApplicationContext,
-    ticker: discord.Option(str, "Enter ticker"),
-    quantity: discord.Option(int, "Enter desired quantity to buy")
-    ):
-    ticker = ticker.upper()
-    price = api.get_price(ticker, 'crypto')
-
-    await ctx.respond(f"Bought {quantity} {ticker} for ${(price * quantity):.2f}!")
-
-@sell_commands.command(name="stock", description="Sell stock.")
-async def sell(
-    ctx: discord.ApplicationContext,
-    ticker: discord.Option(str, "Enter asset ticker"),
-    quantity: discord.Option(int, "Enter desired quantity to sell")
-    ):
-    ticker = ticker.upper()
-    price = api.get_price(ticker, 'stock')
-    await ctx.respond(f"Sold {quantity} {ticker} for ${(price * quantity):.2f}!")
-
-@sell_commands.command(name="crypto", description="Sell crypto.")
-async def sell(
-    ctx: discord.ApplicationContext,
-    ticker: discord.Option(str, "Enter asset ticker"),
-    quantity: discord.Option(int, "Enter desired quantity to sell")
-    ):
-    ticker = ticker.upper()
-    price = api.get_price(ticker, 'crypto')
-    await ctx.respond(f"Sold {quantity} {ticker} for ${(price * quantity):.2f}!")
 
 # -----------------------------------------------------------------------------------------
-# WORK IN PROGRESS: COGS (Having a lot of issues. See /cogs/orders.py)
+# ORDER COMMANDS
 # -----------------------------------------------------------------------------------------
-# cogs_list = ['orders']
-# for cog in cogs_list:
-#     bot.load_extension(f'cogs.{cog}')
+# TODO: let the user ac buy the stocks and add them to json portfolio, ensure that user has funds to purchase, dm after purchase final receipt
+@bot.command(name="buy", description="Buy an asset.")
+async def buy_asset(
+    ctx: discord.ApplicationContext,
+    symbol: discord.Option(str, "Enter asset symbol"),
+    quantity: discord.Option(float, "Enter desired quantity to buy")
+    ):
+    symbol = symbol.upper()
+    query = Query(symbol)
+    
+    if(query.quote is None):
+        await ctx.respond(f"Could not find {symbol}. Please try again.")
+    else:
+        if query.exchange == "CRYPTO":
+            fee = query.price * quantity * 0.0015
+        else:
+            fee = 0.00
+
+        fields_list = [
+            ["Order Type", "Market Buy"],
+            ["Asset Price", f"${query.price:.2f}"],
+            ["Quantity", quantity], 
+            ["Subtotal", f"${(quantity * query.price):.2f}"],
+            ["Fees", f"${(fee):.2f}"],
+            ["Order Total", f"${(quantity * query.price):.2f}"],
+            [chr(173), chr(173)]
+        ]
+
+        if query.exchange == "CRYPTO":
+            await ctx.respond(embed=embedded_message(
+                status='pending',
+                author=query.exchange,
+                title=symbol,
+                desc=query.name,
+                fields=fields_list,
+                footer_text="Pending",
+                colour=0x11BB11))
+        else:
+            await ctx.respond(embed=embedded_message(
+                status='pending',
+                author=query.exchange,
+                thumbnail=query.image,
+                title=symbol,
+                desc=query.name,
+                fields=fields_list,
+                footer_text="Pending",
+                colour=0x11BB11))
+
+
+@bot.command(name='sell', description="Sell an asset.")
+async def sell_asset(
+    ctx: discord.ApplicationContext,
+    symbol: discord.Option(str, "Enter asset symbol"),
+    quantity: discord.Option(float, "Enter desired quantity to sell")
+    ):
+    symbol = symbol.upper()
+    query = Query(symbol)
+
+    if(query.quote is None):
+        await ctx.respond(f"Could not find {symbol}. Please try again.")
+    else:
+
+        if query.exchange == "CRYPTO":
+            pass
+
+
+# -----------------------------------------------------------------------------------------
+# ASSET COMMANDS
+# -----------------------------------------------------------------------------------------
+display_commands = bot.create_group('display', description="Display ")
+
+# @display_commands.command(name='info', description="Display information about an company.")
+# async def info(
+#     ctx: discord.ApplicationContext,
+#     symbol: discord.Option(str, "Enter asset symbol")
+#     ):
+#     symbol = symbol.upper()
+#     await ctx.respond(f"Wow! This is some info!")
+
+# @display_commands.command(name='plot', description="Display performance plot of an asset.")
+# async def plot(
+#     ctx: discord.ApplicationContext,
+#     symbol: discord.Option(str, "Enter asset symbol")
+#     ):
+#     symbol = symbol.upper()
+#     await ctx.respond(f"Wow! This is a plot!")
+
+@display_commands.command(name='quote', description="Display quote of an asset.")
+async def quote(
+    ctx: discord.ApplicationContext,
+    symbol: discord.Option(str, "Enter asset symbol")
+    ):
+    symbol = symbol.upper()
+    # query = Query(symbol)
+    # query.
+    # embed = discord.Embed( 
+    #     title = "embedded title",
+    #     description = "embedded message",  #description is the text that you want to output
+    #     colour = 15158332
+    #     )
+          
+    await ctx.respond("in progress")
+    #await embeddedDefault(ctx)
+
+
+# -----------------------------------------------------------------------------------------
+# BUTTON TESTING
+# -----------------------------------------------------------------------------------------
+# make two button classes one more confirm and one for cancelling
+# button style success for buying, danger for canceling
+
+# @bot.command(name='confirm', description='Confirm trade with buttons')
+# async def confirm(ctx: discord.ApplicationContext):
+
+#     button1 = discord.ui.Button(label="Confirm Trade", style=discord.ButtonStyle.success)
+#     button2 = discord.ui.Button(label="Cancel Trade", style=discord.ButtonStyle.danger)
+
+#     view = discord.ui.View()
+#     view.add_item(button1)
+#     view.add_item(button2)
+#     await ctx.respond("here are the buttons", view=view)
 
 bot.run(settings.BOT_TOKEN)
