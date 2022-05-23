@@ -1,3 +1,5 @@
+# This code is unfinished, but could be developed further for additional features
+
 import certifi
 import json
 import matplotlib.pyplot as plt 
