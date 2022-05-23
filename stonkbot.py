@@ -4,7 +4,7 @@ import logging
 from embedded_messages import embedded_message, ConfirmButtons
 import config
 from fmp_api import Query
-from player import Player
+from player import Player, make_leaderboard
 
 
 # -----------------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ async def buy_asset(
     symbol: discord.Option(str, "Enter asset symbol"),
     quantity: discord.Option(float, "Enter desired quantity to buy")
     ):
-    player = Player(str(ctx.author.id))
+    player = Player(str(ctx.author.id), str(ctx.author))
 
     symbol = symbol.upper()
     query = Query(symbol)
@@ -82,7 +82,7 @@ async def sell_asset(
     symbol: discord.Option(str, "Enter asset symbol"),
     quantity: discord.Option(float, "Enter desired quantity to sell")
     ):
-    player = Player(str(ctx.author.id))
+    player = Player(str(ctx.author.id), str(ctx.author.id))
     
     symbol = symbol.upper()
     query = Query(symbol)
@@ -125,8 +125,35 @@ async def sell_asset(
 # -----------------------------------------------------------------------------------------
 @bot.command(name='profile', description="Display user profile")
 async def profile(ctx: discord.ApplicationContext):
-    player = Player(str(ctx.author.id))
-    await ctx.respond(f"**Profile**\n{ctx.author.display_name}\n**Net Worth**\n${(player.get_networth()):.2f}\n**Cash (Buying Power)**\n${(player.profile['cash']):.2f}\n**Portfolio**\n{player.profile['portfolio']}", ephemeral = True)
+    player = Player(str(ctx.author.id), str(ctx.author))
+    await ctx.respond(f"**Profile**\n{ctx.author.display_name}\n**Net Worth**\n${(player.get_net_worth()):.2f}\n**Cash (Buying Power)**\n${(player.profile['cash']):.2f}\n**Portfolio**\n{player.profile['portfolio']}", ephemeral = True)
+
+@bot.command(name='leaderboard', description='Display a leaderboard of the current players')
+async def leaderboard(ctx: discord.ApplicationContext):
+    
+    data = make_leaderboard()
+
+    leaderboard_top = ""
+
+    for i in range(min(len(data))):
+        leaderboard_top += f"**{i + 1}. {data[i][0]} - ${data[i][1]:.2f}**\n"
+
+    if len(data) == 0:
+        await ctx.respond(embed=embedded_message(
+            author="Your Stonk Bot",
+            title="LEADERBOARD",
+            desc="No Winners"
+        ))
+    else:
+        await ctx.respond(embed=embedded_message(
+            author="Your Stonk Bot",
+            title="THE MOON BOARD",
+            desc=leaderboard_top,
+            footer_text="AMAZING JOB ~ Your Stonk Broker",
+            colour=0xD88C9A,
+            thumbnail='https://cdn.discordapp.com/attachments/976929148264128593/978117534538678292/unknown.png'
+        ))
+
 
 
 @bot.command(name='quote', description="Display quote of an asset.")
@@ -178,21 +205,5 @@ async def quote(
             fields=fields_list,
             footer_text="Quote",
             colour=0x3F84E5), ephemeral=True)
-            
-
-# @display_commands.command(name='plot', description="Display plot of an asset.")
-# async def plot(
-#     ctx: discord.ApplicationContext,
-#     symbol: discord.Option(str, "Enter asset symbol")
-#     ):
-#     symbol = symbol.upper()
-#     query = Query(symbol)
-
-#     if(query.quote is None):
-#         await ctx.respond(f"Could not find {symbol}. Please try again.")
-#     else:
-#         pass
-          
-#     await ctx.respond(file=discord.File(query.plot()))
 
 bot.run(config.BOT_TOKEN)

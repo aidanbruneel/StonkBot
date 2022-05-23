@@ -1,0 +1,37 @@
+{
+    "820421345501511680": {
+        "cash": 94712.12800000001,
+        "portfolio": {
+            "TSLA": 8.0,
+            "BTCUSD": 0.0
+        },
+        "net_worth": 100023.32800000001,
+        "discord_name": "markshark#3645"
+    },
+    "393546926836023317": {
+        "cash": 35440.644,
+        "portfolio": {
+            "AAPL": 30.0,
+            "BTCUSD": 2.0
+        },
+        "net_worth": 100000.0,
+        "discord_name": "FatHulk#0911"
+    },
+    "965990235303456858": {
+        "cash": 24961.82239,
+        "portfolio": {
+            "AAPL": 100.0,
+            "BTCUSD": 2.0
+        },
+        "net_worth": 100000.0,
+        "discord_name": "aidanbruneel#8232"
+    },
+    "934435819966566460": {
+        "cash": 99336.1,
+        "portfolio": {
+            "TSLA": 1.0
+        },
+        "net_worth": 100000,
+        "discord_name": "mel10#2026"
+    }
+}

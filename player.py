@@ -1,4 +1,5 @@
 import json
+import numpy as np
 from fmp_api import Query
 
 def readJson(file='database.json'):
@@ -10,7 +11,7 @@ def writeJson(data, file='database.json'):
         json.dump(data, database, indent = 4)
     database.close()
 
-def appendJson(user_id, user_dict, file='database.json'):
+def appendJson(user_id, user_dict):
     full_data = readJson()
     full_data[user_id] = user_dict
     writeJson(full_data)
@@ -18,19 +19,33 @@ def appendJson(user_id, user_dict, file='database.json'):
 def make_leaderboard():
     data = readJson()
     leader_board = []
+    for player_index, profile_index in data.items():
+        leader_board.append([profile_index['discord_name'], float(profile_index['net_worth'])])
 
     
+    for i in range(len(leader_board) - 1):
+        for j in range(len(leader_board) - i - 1):
+            if leader_board[j][1] > leader_board[j + 1][1]:
+                leader_board[j], leader_board[j + 1] = leader_board[j + 1], leader_board[j]
+        
+    return leader_board[::-1]
+
+# total price * 0.015
+# query.exchange == 'CRYPTO'
 
 class Player():
-    def __init__(self, user: str):
+    def __init__(self, user, discord_name):
         self.user = user
         data = readJson()
         if self.user in data:
             self.profile = data[user]
+            self.profile['net_worth'] = self.get_net_worth()
         else:
             self.profile = {}
             self.profile['cash'] = 100000
             self.profile['portfolio'] = {}
+            self.profile['net_worth'] = self.get_net_worth()
+            self.profile['discord_name'] = discord_name
             appendJson(self.user, self.profile)
 
     def buy_asset(self, query: Query, quantity):
@@ -39,7 +54,11 @@ class Player():
         if self.profile['cash'] < value:
             status = 'nsf'
         else:
-            self.profile['cash'] -= value
+            if query.exchange == "CRYPTO":
+                self.profile['cash'] -= value + (value * 0.015)
+            else:
+                self.profile['cash'] -= value
+            
             if query.symbol in self.profile['portfolio']:
                 self.profile['portfolio'][query.symbol] += quantity
                 status = True
@@ -58,7 +77,11 @@ class Player():
                 status = 'nsa'
             else:
                 self.profile['portfolio'][query.symbol] -= quantity
-                self.profile['cash'] += value
+                if query.exchange == "CRYPTO":
+                    self.profile['cash'] += value - (value * 0.015)
+                else:
+                    self.profile['cash'] += value
+                
                 status = True
         else:
             print("Portfolio does not contain this asset")
@@ -67,7 +90,7 @@ class Player():
         appendJson(self.user, self.profile)
         return status
 
-    def get_networth(self):
+    def get_net_worth(self):
         net_worth = self.profile['cash']
         if len(self.profile['portfolio']) <= 0:
             return net_worth
@@ -76,27 +99,22 @@ class Player():
                 query = Query(key)
                 net_worth += (query.price * value)
             return net_worth
-    
 
+# query1 = Query('TSLA')
+# newPlayer = Player("aidan1", "test1")
+# newPlayer.buy_asset(query1, 10)
 
+# query2 = Query('MSFT')
+# newPlayer = Player("Mark2", "test2")
+# newPlayer.buy_asset(query2, 40)
 
-# userID = input("Input the user ID: ")
+# query3 = Query('AAPL')
+# newPlayer = Player("Murtadha3", "test3")
+# newPlayer.buy_asset(query3, 20)
 
-# newPlayer = Player(userID)
-# #data[userID]['portfolio']['AAPL'] = 10
+# newPlayer = Player("Mel", "test4")
+# newPlayer.buy_asset(query1, 20)
+# newPlayer.buy_asset(query2, 20)
 
+# print(make_leaderboard())
 
-# # record = {}
-# # record["APPLE"] = 20
-# # data[userID]['portfolio'] = record
-
-# # record["TSLA"] = 30
-# # data[userID]['portfolio'] = record
-
-# # print(data[userID]['portfolio'])
-# newPlayer.buy_asset("TSLA", 10)
-# # newPlayer.sell_asset("TSLA", 40)
-
-# print(newPlayer.get_networth())
-
-# print(newPlayer)

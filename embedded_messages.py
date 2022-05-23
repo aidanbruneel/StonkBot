@@ -21,6 +21,9 @@ def embedded_message(
     footer_text: str = 'Status', # this default doesn't really actually make any sense
     timestamp: datetime = datetime.datetime.now(),
     colour = 0x11BB11):
+
+    if len(desc) > 3000:
+        desc = desc[:3000]
     
     embed = discord.Embed(
         title = title,
@@ -107,7 +110,7 @@ class ConfirmButtons(discord.ui.View):
                     colour=0xB20D30
                 ), view=None)
 
-        
+    
     ## CANCEL BUTTON
     async def button2_callback(self, interaction):
 
@@ -120,8 +123,10 @@ class ConfirmButtons(discord.ui.View):
         match confirmed:
             case True:
                 theme_color = 0x11BB11
+                foot_text = "Order Status: Filled"
             case False:
                 theme_color = 0xB20D30
+                foot_text = "Order Status: Cancelled"
 
 
         match self.query.exchange:
@@ -141,7 +146,7 @@ class ConfirmButtons(discord.ui.View):
             ["Order Total", f"${(self.quantity * self.query.price + fee):.2f}"],
             [chr(173), chr(173)] # change this to balance remaining
         ]
-
+        
         await interaction.response.edit_message(embed=embedded_message(
             status='cancelled',
             author=self.query.exchange,
@@ -149,6 +154,6 @@ class ConfirmButtons(discord.ui.View):
             thumbnail=thumbnail_url,
             fields=fields_list,
             desc=self.query.name,
-            footer_text="Order Status: Cancelled",
+            footer_text=foot_text,
             colour=theme_color
         ), view=None)
