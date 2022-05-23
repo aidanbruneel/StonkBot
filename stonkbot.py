@@ -1,10 +1,10 @@
 import discord
 import logging
 
-from embedded_messages import embedded_message
-import settings
-from data_plotting import plot
+from embedded_messages import embedded_message, ConfirmButtons
+import config
 from fmp_api import Query
+from player import Player
 
 
 # -----------------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ logger.addHandler(handler)
 # -----------------------------------------------------------------------------------------
 # BOT LOGIN
 # -----------------------------------------------------------------------------------------
-bot = discord.Bot(debug_guilds=settings.DEBUG_GUILD_IDS)
+bot = discord.Bot(debug_guilds=config.DEBUG_GUILD_IDS)
 
 @bot.event
 async def on_ready():
@@ -31,23 +31,27 @@ async def on_ready():
 # -----------------------------------------------------------------------------------------
 # ORDER COMMANDS
 # -----------------------------------------------------------------------------------------
-# TODO: let the user ac buy the stocks and add them to json portfolio, ensure that user has funds to purchase, dm after purchase final receipt
 @bot.command(name="buy", description="Buy an asset.")
 async def buy_asset(
     ctx: discord.ApplicationContext,
     symbol: discord.Option(str, "Enter asset symbol"),
     quantity: discord.Option(float, "Enter desired quantity to buy")
     ):
+    player = Player(str(ctx.author.id))
+
     symbol = symbol.upper()
     query = Query(symbol)
     
     if(query.quote is None):
         await ctx.respond(f"Could not find {symbol}. Please try again.")
     else:
-        if query.exchange == "CRYPTO":
-            fee = query.price * quantity * 0.0015
-        else:
-            fee = 0.00
+        match query.exchange:
+            case "CRYPTO":
+                fee = query.price * quantity * 0.0015
+                thumbnail_url = config.CRYPTO_ICON
+            case _:
+                fee = 0.00
+                thumbnail_url = query.image
 
         fields_list = [
             ["Order Type", "Market Buy"],
@@ -59,27 +63,16 @@ async def buy_asset(
             [chr(173), chr(173)] # change this to balance remaining
         ]
 
-        # if query.image
-
-        if query.exchange == "CRYPTO":
-            await ctx.respond(embed=embedded_message(
-                status='pending',
-                author=query.exchange,
-                title=symbol,
-                desc=query.name,
-                fields=fields_list,
-                footer_text="Order Status: Pending",
-                colour=0x11BB11))
-        else:
-            await ctx.respond(embed=embedded_message(
-                status='pending',
-                author=query.exchange,
-                thumbnail=query.image,
-                title=symbol,
-                desc=query.name,
-                fields=fields_list,
-                footer_text="Order Status: Pending",
-                colour=0x11BB11))
+        view = ConfirmButtons(symbol, quantity, True, ctx, player)
+        await ctx.respond(embed=embedded_message(
+            status='pending',
+            author=query.exchange,
+            thumbnail=thumbnail_url,
+            title=symbol,
+            desc=query.name,
+            fields=fields_list,
+            footer_text="Order Status: Pending",
+            colour=0xEEB902), view=view)
 
 
 # remove the final if query.exchange and have only one await statement
@@ -89,17 +82,21 @@ async def sell_asset(
     symbol: discord.Option(str, "Enter asset symbol"),
     quantity: discord.Option(float, "Enter desired quantity to sell")
     ):
+    player = Player(str(ctx.author.id))
+    
     symbol = symbol.upper()
     query = Query(symbol)
 
     if(query.quote is None):
         await ctx.respond(f"Could not find {symbol}. Please try again.")
     else:
-
-        if query.exchange == "CRYPTO":
-            fee = query.price * quantity * 0.0015
-        else:
-            fee = 0.00
+        match query.exchange:
+            case "CRYPTO":
+                fee = query.price * quantity * 0.0015
+                thumbnail_url = config.CRYPTO_ICON
+            case _:
+                fee = 0.00
+                thumbnail_url = query.image
 
         fields_list = [
             ["Order Type", "Market Sell"],
@@ -111,81 +108,91 @@ async def sell_asset(
             [chr(173), chr(173)]
         ]
 
-        if query.exchange == "CRYPTO":
-            await ctx.respond(embed=embedded_message(
-                status='pending',
-                author=query.exchange,
-                title=symbol,
-                desc=query.name,
-                fields=fields_list,
-                footer_text="Order Status: Pending",
-                colour=0xB20D30))
-        else:
-            await ctx.respond(embed=embedded_message(
-                status='pending',
-                author=query.exchange,
-                thumbnail=query.image,
-                title=symbol,
-                desc=query.name,
-                fields=fields_list,
-                footer_text="Order Status: Pending",
-                colour=0xB20D30))
+        view = ConfirmButtons(symbol, quantity, False, ctx, player)
+        await ctx.respond(embed=embedded_message(
+            status='pending',
+            author=query.exchange,
+            thumbnail=thumbnail_url,
+            title=symbol,
+            desc=query.name,
+            fields=fields_list,
+            footer_text="Order Status: Pending",
+            colour=0xEEB902), view=view)
 
 
 # -----------------------------------------------------------------------------------------
 # ASSET COMMANDS
 # -----------------------------------------------------------------------------------------
-display_commands = bot.create_group('display', description="Display ")
+@bot.command(name='profile', description="Display user profile")
+async def profile(ctx: discord.ApplicationContext):
+    player = Player(str(ctx.author.id))
+    await ctx.respond(f"**Profile**\n{ctx.author.display_name}\n**Net Worth**\n${(player.get_networth()):.2f}\n**Cash (Buying Power)**\n${(player.profile['cash']):.2f}\n**Portfolio**\n{player.profile['portfolio']}", ephemeral = True)
 
-# @display_commands.command(name='info', description="Display information about an company.")
-# async def info(
-#     ctx: discord.ApplicationContext,
-#     symbol: discord.Option(str, "Enter asset symbol")
-#     ):
-#     symbol = symbol.upper()
-#     await ctx.respond(f"Wow! This is some info!")
 
-# @display_commands.command(name='plot', description="Display performance plot of an asset.")
-# async def plot(
-#     ctx: discord.ApplicationContext,
-#     symbol: discord.Option(str, "Enter asset symbol")
-#     ):
-#     symbol = symbol.upper()
-#     await ctx.respond(f"Wow! This is a plot!")
-
-@display_commands.command(name='quote', description="Display quote of an asset.")
+@bot.command(name='quote', description="Display quote of an asset.")
 async def quote(
     ctx: discord.ApplicationContext,
     symbol: discord.Option(str, "Enter asset symbol")
     ):
     symbol = symbol.upper()
-    # query = Query(symbol)
-    # query.
-    # embed = discord.Embed( 
-    #     title = "embedded title",
-    #     description = "embedded message",  #description is the text that you want to output
-    #     colour = 15158332
-    #     )
+    query = Query(symbol)
+
+    if(query.quote is None):
+        await ctx.respond(f"Could not find {symbol}. Please try again.")
+    else:
+        match query.exchange:
+            case "CRYPTO":
+                thumbnail_url = config.CRYPTO_ICON
+            case _:
+                thumbnail_url = query.image
+        fields_list = [
+            ["Asset Price", f"${(query.price):.2f}"],
+
+            ["Price Change", f"${(query.price):.2f} ({(query.change_percent):.2f}%)"],
+            ["Volume ", f"{query.volume}"],
+            ["Avg Volume", f"{query.avg_volume}"],
+
+            ["Open", f"${(query.open):.2f}"],
+            ["High", f"${(query.day_high):.2f}"],
+            ["Low", f"${(query.day_low):.2f}"],
+
+            ["Previous Close", f"${(query.previous_close):.2f}"],
+            ["Year High", f"${(query.year_high):.2f}"],
+            ["Year Low", f"${(query.year_low):.2f}"],
+
+            ["Market Cap", f"${query.market_cap}"],
+            ["P/E Ratio",  '-' if query.exchange == 'CRYPTO' else f"{(query.pe_ratio)}"],
+            ["Earnings Per Share", '-' if query.exchange == 'CRYPTO' else f"${(query.eps):.2f}"],
+
+            ["50-Day Average", f"${(query.price_avg_50d):.2f}"],
+            ["200-Day Average", f"${(query.price_avg_200d):.2f}"],
+            ["Shares Outstanding", f"{(query.shares_outstanding):.2f}"]
+            ]
+            
+        await ctx.respond(embed=embedded_message(
+            status='info',
+            author=query.exchange,
+            thumbnail=thumbnail_url,
+            title=symbol,
+            desc=query.name,
+            fields=fields_list,
+            footer_text="Quote",
+            colour=0x3F84E5), ephemeral=True)
+            
+
+# @display_commands.command(name='plot', description="Display plot of an asset.")
+# async def plot(
+#     ctx: discord.ApplicationContext,
+#     symbol: discord.Option(str, "Enter asset symbol")
+#     ):
+#     symbol = symbol.upper()
+#     query = Query(symbol)
+
+#     if(query.quote is None):
+#         await ctx.respond(f"Could not find {symbol}. Please try again.")
+#     else:
+#         pass
           
-    await ctx.respond("in progress")
-    #await embeddedDefault(ctx)
+#     await ctx.respond(file=discord.File(query.plot()))
 
-
-# -----------------------------------------------------------------------------------------
-# BUTTON TESTING
-# -----------------------------------------------------------------------------------------
-# make two button classes one more confirm and one for cancelling
-# button style success for buying, danger for canceling
-
-# @bot.command(name='confirm', description='Confirm trade with buttons')
-# async def confirm(ctx: discord.ApplicationContext):
-
-#     button1 = discord.ui.Button(label="Confirm Trade", style=discord.ButtonStyle.success)
-#     button2 = discord.ui.Button(label="Cancel Trade", style=discord.ButtonStyle.danger)
-
-#     view = discord.ui.View()
-#     view.add_item(button1)
-#     view.add_item(button2)
-#     await ctx.respond("here are the buttons", view=view)
-
-bot.run(settings.BOT_TOKEN)
+bot.run(config.BOT_TOKEN)

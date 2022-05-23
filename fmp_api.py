@@ -1,18 +1,19 @@
 from urllib.request import urlopen
 import certifi
 import json
-import math
+import config
+import matplotlib.pyplot as plt 
 
-from  data_plotting import plot # might not need this
-import settings
+
+#from  data_plotting import plot # might not need this
+import config
 
 class Query:
-    def __init__(self, symbol: str, includeData: bool = False):
+    def __init__(self, symbol: str):
         self.__symbol = symbol
         # Quote
         self.__quote = self.get_quote()
         self.__profile = self.get_profile()
-        #self.__history = self.get_history("15min")
 
     def web_scrape(self, url: str): # Returns dict
         data = urlopen(url, cafile=certifi.where()).read().decode('utf-8')
@@ -23,25 +24,33 @@ class Query:
             return None
 
     def get_quote(self):
-        url = (f"https://financialmodelingprep.com/api/v3/quote/{self.__symbol}?apikey={settings.API_KEY}")
+        url = (f"https://financialmodelingprep.com/api/v3/quote/{self.__symbol}?apikey={config.API_KEY}")
         return self.web_scrape(url)
 
-    # def get_history(self, interval: str):
-    #     url = (f"https://financialmodelingprep.com/api/v3/historical_chart/{interval}/{self.__symbol}?apikey={settings.API_KEY}")
-        
-    #     data = urlopen(url, cafile=certifi.where()).read().decode('utf-8')
-
-    #     if json.loads(data):
-    #         data = json.loads(data)
-    #         x = [math.average(time_info['open'], time_info['closed']) for time_info in data][::-1]
-    #         return x
-    #     else:
-    #         return None
-    
     def get_profile(self):
-        url = (f"https://financialmodelingprep.com/api/v3/profile/{self.__symbol}?apikey={settings.API_KEY}")
+        url = (f"https://financialmodelingprep.com/api/v3/profile/{self.__symbol}?apikey={config.API_KEY}")
         return self.web_scrape(url)
     
+    def get_history(self, interval: str):
+        match interval:
+            case 'daily':
+                url = f"https://financialmodelingprep.com/api/v3/historical-price-full/{self.__symbol}?apikey={config.API_KEY}"
+            case _:
+                url = f"https://financialmodelingprep.com/api/v3/historical-price/{interval}/{self.__symbol}?apikey={config.API_KEY}"
+        
+        data = urlopen(url, cafile=certifi.where()).read().decode('utf-8')
+        
+        if json.loads(data):
+            data_dict = json.loads(data)
+            y = []
+            for time_slot in data_dict:
+                avg = (time_slot['open'] + time_slot['close']) / 2
+                y.append(avg)
+            return y
+        else:
+            print('error')
+            return None
+
     @property
     def quote(self):
         return self.__quote
@@ -65,6 +74,10 @@ class Query:
     #sum_list = [a + b for a, b in zip(list1, list2)]
     #divide values in new list by 2 - these will be the y-values for the plot
     
+    @property
+    def symbol(self):
+        return self.__symbol
+
     @property
     def name(self):
         return self.__quote['name']
@@ -157,30 +170,13 @@ class Query:
     def timestamp(self):
         return self.__quote['timestamp']
     
-    
-    
-#def get_history_crypto(symbol: str, type: str):
-#     match time.lower():
-#         case ''
-#   https://financialmodelingprep.com/api/v3/historical-chart/1min/BTCUSD?apikey=fc9f5e0ac89b400c141ad9f64b91f1de
-
-#     url = (f"https://financialmodelingprep.com/api/v3/{quote}/{symbol}?apikey={settings.API_KEY}")
-# =======
-# # def get_income_statements(symbol:str,limit,period,):
-# >>>>>>> Stashed changes
-
-#     response = urlopen(url, cafile=certifi.where())
-#     data = response.read().decode("utf-8")
-
-#     if json.loads(data): # if stock was found
-#         return json.loads(data)[0]['price']
-#     else:
-#         return -1
-
-# query = Query('AAPL')
-# print(f"{(query.get_market_cap()):.2f}")
-
-
-# 1. User commands to do something that requires API information of some kind
-# 2. Query object is instantiated
-# 3. 
+    def plot(self, interval: str = '5min'):
+        y = self.get_history(interval)
+        x = [i for i in range(1, len(y) + 1)]
+        plt.plot(x,y)
+        plt.xlabel('time')
+        plt.ylabel('stock price')
+        plt.figure()
+        plt.show()
+        plt.savefig('plot_figure.png')
+        return 'plot_figure.png'
