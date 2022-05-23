@@ -1,20 +1,23 @@
 import json
-import numpy as np
 from fmp_api import Query
+
 
 def readJson(file='database.json'):
     with open(file) as database:
         return json.load(database)
+
 
 def writeJson(data, file='database.json'):
     with open(file, "w") as database:
         json.dump(data, database, indent = 4)
     database.close()
 
+
 def appendJson(user_id, user_dict):
     full_data = readJson()
     full_data[user_id] = user_dict
     writeJson(full_data)
+
 
 def make_leaderboard():
     data = readJson()
@@ -30,10 +33,9 @@ def make_leaderboard():
         
     return leader_board[::-1]
 
-# total price * 0.015
-# query.exchange == 'CRYPTO'
 
 class Player():
+
     def __init__(self, user, discord_name):
         self.user = user
         data = readJson()
@@ -47,6 +49,7 @@ class Player():
             self.profile['net_worth'] = self.get_net_worth()
             self.profile['discord_name'] = discord_name
             appendJson(self.user, self.profile)
+
 
     def buy_asset(self, query: Query, quantity):
         value = query.price * quantity
@@ -67,6 +70,7 @@ class Player():
                 status = True
         appendJson(self.user, self.profile)
         return status
+
 
     def sell_asset(self, query: Query, quantity):
         value = query.price * quantity
@@ -90,6 +94,7 @@ class Player():
         appendJson(self.user, self.profile)
         return status
 
+
     def get_net_worth(self):
         net_worth = self.profile['cash']
         if len(self.profile['portfolio']) <= 0:
@@ -99,22 +104,3 @@ class Player():
                 query = Query(key)
                 net_worth += (query.price * value)
             return net_worth
-
-# query1 = Query('TSLA')
-# newPlayer = Player("aidan1", "test1")
-# newPlayer.buy_asset(query1, 10)
-
-# query2 = Query('MSFT')
-# newPlayer = Player("Mark2", "test2")
-# newPlayer.buy_asset(query2, 40)
-
-# query3 = Query('AAPL')
-# newPlayer = Player("Murtadha3", "test3")
-# newPlayer.buy_asset(query3, 20)
-
-# newPlayer = Player("Mel", "test4")
-# newPlayer.buy_asset(query1, 20)
-# newPlayer.buy_asset(query2, 20)
-
-# print(make_leaderboard())
-

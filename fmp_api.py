@@ -4,16 +4,17 @@ import json
 import config
 import matplotlib.pyplot as plt 
 
-
-#from  data_plotting import plot # might not need this
 import config
 
+
 class Query:
+
     def __init__(self, symbol: str):
         self.__symbol = symbol
         # Quote
         self.__quote = self.get_quote()
         self.__profile = self.get_profile()
+
 
     def web_scrape(self, url: str): # Returns dict
         data = urlopen(url, cafile=certifi.where()).read().decode('utf-8')
@@ -23,13 +24,16 @@ class Query:
         else:
             return None
 
+
     def get_quote(self):
         url = (f"https://financialmodelingprep.com/api/v3/quote/{self.__symbol}?apikey={config.API_KEY}")
         return self.web_scrape(url)
 
+
     def get_profile(self):
         url = (f"https://financialmodelingprep.com/api/v3/profile/{self.__symbol}?apikey={config.API_KEY}")
         return self.web_scrape(url)
+
     
     def get_history(self, interval: str):
         match interval:
@@ -50,6 +54,7 @@ class Query:
         else:
             print('error')
             return None
+            
 
     @property
     def quote(self):
@@ -66,13 +71,6 @@ class Query:
                 return self.__profile['website']
             case False:
                 return None
-    
-    # @property
-    # def open_history(self,interval:str):
-    #     return self.__history
-    
-    #sum_list = [a + b for a, b in zip(list1, list2)]
-    #divide values in new list by 2 - these will be the y-values for the plot
     
     @property
     def symbol(self):

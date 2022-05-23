@@ -3,6 +3,7 @@ from xml.sax.handler import property_declaration_handler
 import fmp_api as api
 
 class Asset:
+
     def __init__(self, symbol: str, quantity = 0):
         # Initialize variables
         self.__symbol = symbol
@@ -13,6 +14,7 @@ class Asset:
     def symbol(self):
         print("Getting symbol...")
         return self.__symbol
+
 
 # class Receipt:
 #     def __init__(self, asset: Asset, fee: float = 0.00):

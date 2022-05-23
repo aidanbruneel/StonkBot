@@ -9,6 +9,7 @@ import datetime as dt
 
 import config
 
+
 def get_history(interval: str = '5min'):
     match interval:
         case 'daily':

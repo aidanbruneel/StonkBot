@@ -46,8 +46,7 @@ def embedded_message(
 
     if image:
         embed.set_image(url=image)
-    
-    
+
     # footer_icon
     match status:
         case 'info':
@@ -79,7 +78,6 @@ class ConfirmButtons(discord.ui.View):
         self.buying = buying
         self.ctx = ctx
 
-
         self.button1 = discord.ui.Button(label="Confirm Trade", style=discord.ButtonStyle.success, emoji='✔')
         self.button2 = discord.ui.Button(label="Cancel Trade", style=discord.ButtonStyle.danger, emoji='✖')
 
@@ -110,7 +108,7 @@ class ConfirmButtons(discord.ui.View):
                     colour=0xB20D30
                 ), view=None)
 
-    
+
     ## CANCEL BUTTON
     async def button2_callback(self, interaction):
 
@@ -127,7 +125,6 @@ class ConfirmButtons(discord.ui.View):
             case False:
                 theme_color = 0xB20D30
                 foot_text = "Order Status: Cancelled"
-
 
         match self.query.exchange:
             case "CRYPTO":

@@ -37,13 +37,14 @@ async def buy_asset(
     symbol: discord.Option(str, "Enter asset symbol"),
     quantity: discord.Option(float, "Enter desired quantity to buy")
     ):
-    player = Player(str(ctx.author.id), str(ctx.author))
 
+    player = Player(str(ctx.author.id), str(ctx.author))
     symbol = symbol.upper()
     query = Query(symbol)
     
     if(query.quote is None):
         await ctx.respond(f"Could not find {symbol}. Please try again.")
+
     else:
         match query.exchange:
             case "CRYPTO":
@@ -55,9 +56,11 @@ async def buy_asset(
 
         fields_list = [
             ["Order Type", "Market Buy"],
+
             ["Asset Price", f"${query.price:.2f}"],
             ["Quantity", quantity], 
             ["Order Subtotal", f"${(quantity * query.price):.2f}"],
+            
             ["Fees", f"${(fee):.2f}"],
             ["Order Total", f"${(quantity * query.price + fee):.2f}"],
             [chr(173), chr(173)] # change this to balance remaining
@@ -89,6 +92,7 @@ async def sell_asset(
 
     if(query.quote is None):
         await ctx.respond(f"Could not find {symbol}. Please try again.")
+
     else:
         match query.exchange:
             case "CRYPTO":
@@ -100,9 +104,11 @@ async def sell_asset(
 
         fields_list = [
             ["Order Type", "Market Sell"],
+
             ["Asset Price", f"${query.price:.2f}"],
             ["Quantity", quantity], 
             ["Order Subtotal", f"${(quantity * query.price):.2f}"],
+
             ["Fees", f"${(fee):.2f}"],
             ["Order Total", f"${(quantity * query.price - fee):.2f}"],
             [chr(173), chr(173)]
@@ -126,7 +132,8 @@ async def sell_asset(
 @bot.command(name='profile', description="Display user profile")
 async def profile(ctx: discord.ApplicationContext):
     player = Player(str(ctx.author.id), str(ctx.author))
-    await ctx.respond(f"**Profile**\n{ctx.author.display_name}\n**Net Worth**\n${(player.get_net_worth()):.2f}\n**Cash (Buying Power)**\n${(player.profile['cash']):.2f}\n**Portfolio**\n{player.profile['portfolio']}", ephemeral = True)
+    await ctx.respond(f"**Profile**\n{ctx.author.display_name}\n**Net Worth**\n${(player.get_net_worth()):.2f}\n**Cash (Buying Power)**\n${(player.profile['cash']):.2f}\n**Portfolio**\n{player.profile['portfolio']}",
+                      ephemeral = True)
 
 @bot.command(name='leaderboard', description='Display a leaderboard of the current players')
 async def leaderboard(ctx: discord.ApplicationContext):
@@ -155,7 +162,6 @@ async def leaderboard(ctx: discord.ApplicationContext):
         ))
 
 
-
 @bot.command(name='quote', description="Display quote of an asset.")
 async def quote(
     ctx: discord.ApplicationContext,
@@ -166,12 +172,14 @@ async def quote(
 
     if(query.quote is None):
         await ctx.respond(f"Could not find {symbol}. Please try again.")
+
     else:
         match query.exchange:
             case "CRYPTO":
                 thumbnail_url = config.CRYPTO_ICON
             case _:
                 thumbnail_url = query.image
+
         fields_list = [
             ["Asset Price", f"${(query.price):.2f}"],
 
@@ -205,5 +213,6 @@ async def quote(
             fields=fields_list,
             footer_text="Quote",
             colour=0x3F84E5), ephemeral=True)
+
 
 bot.run(config.BOT_TOKEN)
